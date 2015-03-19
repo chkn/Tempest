@@ -93,8 +93,9 @@ namespace Tempest.Providers.Network
 			callCategory = String.Format ("NetworkServerConnection:{1} PingCallback({0})", this.pingsOut, connectionId);
 			#endif
 			Trace.WriteLineIf (NTrace.TraceVerbose, "Entering", callCategory);
-
-			Ping();
+	
+			if (IsConnected)
+				Ping();
 
 			Trace.WriteLineIf (NTrace.TraceVerbose, "Exiting", callCategory);
 		}

@@ -174,8 +174,9 @@ namespace Tempest.Providers.Network
 			}
 		}
 
-		private void ConnectCompleted (object sender, SocketAsyncEventArgs e)
+		protected override void ConnectCompleted (object sender, SocketAsyncEventArgs e)
 		{
+			base.ConnectCompleted (sender, e);
 			int c = GetNextCallId();
 			Trace.WriteLineIf (NTrace.TraceVerbose, "Entering", String.Format ("{2}:{3} {4}:ConnectCompleted({0},{1})", e.BytesTransferred, e.SocketError, this.typeName, connectionId, c));
 
@@ -247,6 +248,7 @@ namespace Tempest.Providers.Network
 			switch (e.Message.MessageType)
 			{
 				case (ushort)TempestMessageType.Ping:
+					base.OnTempestMessageReceived (e);
 					var ping = (PingMessage)e.Message;
 					if (PingFrequency == 0 || this.activityTimer == null)
 					{
@@ -262,8 +264,6 @@ namespace Tempest.Providers.Network
 					}
 					else if (ping.Interval != PingFrequency)
 						this.activityTimer.Interval = ping.Interval;
-
-					base.OnTempestMessageReceived (e);
 					break;
 
 				case (ushort)TempestMessageType.AcknowledgeConnect:
@@ -329,7 +329,8 @@ namespace Tempest.Providers.Network
 
 		private void OnActivityTimer (object sender, EventArgs e)
 		{
-			Ping();
+			if (IsConnected)
+				Ping();
 		}
 
 		private void OnConnected (ClientConnectionEventArgs e)

@@ -379,6 +379,7 @@ namespace Tempest.Providers.Network
 
 			if (this.pingsOut >= 2)
 			{
+				this.pingsOut = 0;
 			//    Trace.WriteLineIf (NTrace.TraceVerbose, "Exiting (" + this.pingsOut + " pings out)", callCategory);
 			    Disconnect(); // Connection timed out
 			    return;
@@ -389,7 +390,7 @@ namespace Tempest.Providers.Network
 				Interlocked.Increment (ref this.pingsOut);
 
 				long sent = Stopwatch.GetTimestamp();
-				SendFor (new PingMessage { Interval = this.pingFrequency }).ContinueWith (t => {
+				SendFor (new PingMessage { Interval = PingFrequency }).ContinueWith (t => {
 					long responseTime = Stopwatch.GetTimestamp() - sent;
 					ResponseTime = (int)TimeSpan.FromTicks (responseTime).TotalMilliseconds;
 				}, TaskScheduler.Current);
@@ -706,7 +707,7 @@ namespace Tempest.Providers.Network
 			return true;
 		}
 
-		protected int pingsOut = 0;
+		protected volatile int pingsOut = 0;
 
 		protected virtual void OnTempestMessageReceived (MessageEventArgs e)
 		{
@@ -821,6 +822,11 @@ namespace Tempest.Providers.Network
 			Trace.WriteLineIf (NTrace.TraceVerbose, "Raised Disconnected, exiting", category);
 
 			return tcs.Task;
+		}
+
+		protected virtual void ConnectCompleted (object sender, SocketAsyncEventArgs e)
+		{
+			this.pingsOut = 0;
 		}
 
 		private void OnDisconnectCompleted (object sender, SocketAsyncEventArgs e)
