@@ -97,8 +97,7 @@ namespace Tempest.Providers.Network
 		{
 			base.Start (types);
 
-			Timer timer = new Timer (100);
-			timer = new Timer (100);
+			var timer = new Timer (100);
 			timer.TimesUp += OnDeliveryTimer;
 			timer.Start();
 			this.deliveryTimer = timer;
@@ -222,7 +221,7 @@ namespace Tempest.Providers.Network
 				if (newProtocol == null)
 					throw new ArgumentException ("null Protocol in protocols", "protocols");
 
-				if (newProtocol.RequiresHandshake && this.crypto == null)
+				if (newProtocol.id != 1 && newProtocol.RequiresHandshake && this.crypto == null)
 					throw new ArgumentException ("Protocol requires handshake, but no crypto provided", "protocols");
 			}
 		}

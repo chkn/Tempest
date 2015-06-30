@@ -245,10 +245,10 @@ namespace Tempest.Providers.Network
 
 		protected override void OnTempestMessageReceived (MessageEventArgs e)
 		{
+			base.OnTempestMessageReceived (e);
 			switch (e.Message.MessageType)
 			{
 				case (ushort)TempestMessageType.Ping:
-					base.OnTempestMessageReceived (e);
 					var ping = (PingMessage)e.Message;
 					if (PingFrequency == 0 || this.activityTimer == null)
 					{
@@ -304,10 +304,6 @@ namespace Tempest.Providers.Network
 					if (tcs != null)
 						tcs.TrySetResult (new ClientConnectionResult (ConnectionResult.Success, this.serverAuthenticationKey));
 
-					break;
-
-				default:
-					base.OnTempestMessageReceived(e);
 					break;
 			}
 		}

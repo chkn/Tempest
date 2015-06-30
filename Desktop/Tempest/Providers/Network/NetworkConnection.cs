@@ -103,7 +103,7 @@ namespace Tempest.Providers.Network
 				throw new ArgumentNullException ("protocols");
 
 			this.authenticationKey = authKey;
-			this.requiresHandshake = protocols.Any (p => p.RequiresHandshake);
+			this.requiresHandshake = protocols.Any (p => p.id != 1 && p.RequiresHandshake);
 			if (this.requiresHandshake)
 			{
 				ThreadPool.QueueUserWorkItem (s =>
@@ -377,11 +377,11 @@ namespace Tempest.Providers.Network
 			var now = DateTime.Now;
 			var last = (now - this.lastPing);
 
-			if (this.pingsOut >= 2)
+			if (this.pingsOut >= 6)
 			{
 				this.pingsOut = 0;
 			//    Trace.WriteLineIf (NTrace.TraceVerbose, "Exiting (" + this.pingsOut + " pings out)", callCategory);
-			    Disconnect(); // Connection timed out
+			    Disconnect(ConnectionResult.TimedOut); // Connection timed out
 			    return;
 			}
 
@@ -607,7 +607,7 @@ namespace Tempest.Providers.Network
 			do
 			{
 				int p;
-				if (e.BytesTransferred == 0 || e.SocketError != SocketError.Success)
+				if (/* e.BytesTransferred == 0 || */ e.SocketError != SocketError.Success)
 				{
 					Disconnect(); // This is right, don't mess with it anymore.
 					p = Interlocked.Decrement (ref this.pendingAsync);
@@ -711,21 +711,13 @@ namespace Tempest.Providers.Network
 
 		protected virtual void OnTempestMessageReceived (MessageEventArgs e)
 		{
+			this.pingsOut = 0; //if we receive *any* message, let's count it as a pong
 			switch (e.Message.MessageType)
 			{
 				case (ushort)TempestMessageType.Ping:
 					var ping = (PingMessage)e.Message;
 					this.pingFrequency = ping.Interval;
 					SendResponseAsync (e.Message, new PongMessage());
-					break;
-
-				case (ushort)TempestMessageType.Pong:
-					this.pingsOut = 0;
-					break;
-
-				case (ushort)TempestMessageType.Disconnect:
-					var msg = (DisconnectMessage)e.Message;
-					Disconnect (msg.Reason, msg.CustomReason, notify: false);
 					break;
 			}
 		}
